@@ -66,4 +66,31 @@ class RideNotificationController extends Controller
 
         return response()->json(['message' => 'Notificaciones enviadas a conductores cercanos.']);
     }
+
+     public function getDriverOffers($rideRequestId)
+    {
+        $ride = RideRequest::findOrFail($rideRequestId);
+
+        $offers = RideRequestNotification::with('driver')
+            ->where('ride_request_id', $ride->id)
+            ->where('status', 'offered')
+            ->get()
+            ->map(function ($offer) {
+                return [
+                    'notification_id' => $offer->id,
+                    'driver_id' => $offer->driver_id,
+                    'driver_name' => $offer->driver->name ?? 'N/A',
+                    'driver_rating' => $offer->driver->rating ?? null,
+                    'vehicle' => $offer->driver->vehicle_name ?? null,
+                    'price_offer' => $offer->price_offer ?? null,
+                    'device_type' => $offer->device_type,
+                    'responded_at' => $offer->responded_at,
+                ];
+            });
+
+        return response()->json([
+            'ride_id' => $ride->id,
+            'offers' => $offers
+        ]);
+    }
 }

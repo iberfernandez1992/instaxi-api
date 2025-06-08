@@ -168,6 +168,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{rideRequest}', [RideRequestController::class, 'update']);
         Route::delete('/{rideRequest}', [RideRequestController::class, 'destroy']);
         Route::post('/{id}/notify-drivers', [RideNotificationController::class, 'notifyNearbyDrivers']);
+        Route::get('/{rideRequestId}/ofertas', [RideNotificationController::class, 'getDriverOffers']);
 
     });
     Route::prefix('address-rider')->group(function () {
