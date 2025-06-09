@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RideRequestResource;
 use App\Models\RideRequest;
+use App\Traits\Socketio;
 use Illuminate\Http\Request;
 use Exception;
 
 class RideRequestController extends Controller
 {
+    use Socketio;
+    
     public function index()
     {
         try {
@@ -45,11 +49,15 @@ public function store(Request $request)
             'start_time' => 'nullable|date',
             'end_time' => 'nullable|date',
             'created_by_id' => 'nullable|exists:users,id',
+            'socket_module' => 'nullable',
         ]);
 
         $data['status'] = 'pending';
 
         $ride = RideRequest::create($data);
+
+        // emit socket for ejm: viaje-ofertar
+        $this->emmitByPost('taxi/'.$request->socket_module, new RideRequestResource($ride));
 
         return response()->json([
             'success' => true,
@@ -103,10 +111,17 @@ public function store(Request $request)
             'start_time' => 'sometimes|nullable|date',
             'end_time' => 'sometimes|nullable|date',
             'created_by_id' => 'sometimes|nullable|exists:users,id',
-            'status' => 'sometimes|in:pending,accepted,completed,cancelled', 
+            'status' => 'sometimes|in:pending,accepted,completed,cancelled',
+            'socket_module' => 'nullable',
         ]);
 
         $rideRequest->update($data);
+
+        // emit socket for ejm: viaje-ofertar
+        $this->emmitByPost(
+            'taxi/' . $request->socket_module,
+            new RideRequestResource($rideRequest->resolve())
+        );
 
         return response()->json([
             'success' => true,
